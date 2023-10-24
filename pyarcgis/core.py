@@ -3,6 +3,8 @@
 import os
 import arcpy
 
+MAPS_EXCLUDE_PATTERN = ["template","00"]
+
 
 class Project:
     _path = None
@@ -10,7 +12,7 @@ class Project:
     def __init__(self, path):
         self.path = path
 
-    
+        
     @property
     def path(self):
         return self._path
@@ -19,24 +21,32 @@ class Project:
     def path(self, path):
         self._path = os.path(path)
 
+    @property
+    def maps(self):
+        return _get_files_by_extension(self.path, ".mxd",exclude_patterns=MAPS_EXCLUDE_PATTERN)
+
 
     def export_all_maps(self, output_folder=None,verbose=False):
-        files = self._get_files_by_extension()
-        for file in files:
+        for mxd in self.maps:
             if verbose:
-                print("Exporting map: {}".format(file))
-            with Map(file) as imap:
+                print("Exporting map: {}".format(mxd))
+            with Map(mxd) as imap:
                 imap.export_to_pdf()
             if verbose:
-                print("Map exported: {}".format(file))
+                print("Map exported: {}".format(mxd))
 
-    def _get_files_by_extension(self,extension = ".mxd"):
-        files_list = []
-        for root, subdirs, files in os.walk(self.path):
-            for file in files:
-                if file.endswith(extension):
-                    files_list.append(os.path.join(root, file))
-        return files_list
+import fnmatch
+
+def _get_files_by_extension(root, extension,exclude_patterns=None):
+    files_list = []
+    for root, subdirs, files in os.walk(root):
+        for file in files:
+            if file.endswith(extension):
+                if exclude_patterns:
+                    if any(pattern in file for pattern in exclude_patterns):
+                        continue
+                files_list.append(os.path.join(root, file))
+    return files_list
 
 
 class Map:
@@ -60,7 +70,6 @@ class Map:
         # Clean up the MapDocument object by deleting it.
         del self._map
 
-
     def export_to_pdf(self):
         try :
             arcpy.mapping.ExportToPDF(
@@ -68,4 +77,4 @@ class Map:
                 os.path.join(self._mxd_folder, self._mxd_filename+".pdf"))
         except Exception as e:
             print("Error exporting map: {}".format(self._mxd_path))
-            print(e)
+            raise e
