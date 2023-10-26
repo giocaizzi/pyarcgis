@@ -5,10 +5,6 @@ import arcpy
 
 MAPS_EXCLUDE_PATTERN = ["template","00"]
 
-LAYOUT_TEXT_ELEMENTS = [
-    r"{{PROJ}}"
-    ]
-
 def _get_files_by_extension(root, extension, exclude_patterns=None, subset_pattern=None):
     if exclude_patterns and not isinstance(exclude_patterns, list):
         exclude_patterns = [exclude_patterns]
@@ -35,11 +31,9 @@ class Project:
     @property
     def path(self):
         return self._path
-
     
     def get_maps(self,subset_pattern=None):
         return _get_files_by_extension(self.path, ".mxd",exclude_patterns=MAPS_EXCLUDE_PATTERN,subset_pattern=subset_pattern)
-
 
     def export_maps(self,maps,verbose=False):
         for mxd in maps:
@@ -48,7 +42,18 @@ class Project:
             with Map(mxd) as imap:
                 imap.export_to_pdf()
             if verbose:
-                print("Map exported: {}".format(mxd))
+                print("Map exported!")
+
+    def set_layout_text_elements(self,maps,layout_elements_map,verbose=False):
+        for mxd in maps:
+            if verbose:
+                print("Setting layout text elements: {}".format(mxd))
+            with Map(mxd) as imap:
+                imap.set_layout_text_elements(layout_elements_map)
+                # required to save
+                imap.save()
+            if verbose:
+                print("Layout text elements set and saved!")
 
 
 class Map:
@@ -81,6 +86,7 @@ class Map:
         del self._map
 
     def export_to_pdf(self):
+        # export the map to a pdf file
         try :
             arcpy.mapping.ExportToPDF(
                 self._map,
@@ -89,17 +95,19 @@ class Map:
             print("Error exporting map: {}".format(self._mxd_path))
             raise e
         
-    def set_template_layout_text_elements(self,layout_elements_map):
-        for element in LAYOUT_TEXT_ELEMENTS:
-            self.set_text_element(element, layout_elements_map[element])
+    def set_layout_text_elements(self,layout_elements_map):
+        # set template layout text elements
+        for key in layout_elements_map:
+            self._set_layout_text_element(key, layout_elements_map[key])
         
-    def set_text_element(self, old_text, new_text):
+    def _set_layout_text_element(self, old_text, new_text):
+        # set text element
         for element in self._get_layout_elements():
             if element.text == old_text:
                 element.text = new_text
-
-    
-        
+                break
+        else:
+            raise Exception("Text element not found: {}".format(old_text))
 
     def _get_layout_elements(self, element_type="TEXT_ELEMENT"):
         return arcpy.mapping.ListLayoutElements(self._map, element_type)
