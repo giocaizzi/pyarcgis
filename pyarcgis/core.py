@@ -104,9 +104,19 @@ class Map:
         self._map.save()
 
     @property
+    def filename(self):
+        """get filename of the mxd file"""
+        return self._mxd_filename
+    
+    @property
+    def map_object(self):
+        """get the arcpy map object"""
+        return self._map
+
+    @property
     def dataframes(self):
         """get list of dataframes"""
-        return arcpy.mapping.ListDataFrames(self._map)
+        return arcpy.mapping.ListDataFrames(self.map_object)
 
     def __enter__(self):
         # context manager enter method
@@ -124,8 +134,8 @@ class Map:
         # export the map to a pdf file
         try :
             arcpy.mapping.ExportToPDF(
-                self._map,
-                os.path.join(self._mxd_folder, self._mxd_filename+".pdf"))
+                self.map_object,
+                os.path.join(self._mxd_folder, self.filename+".pdf"))
         except Exception as e:
             print("Error exporting map: {}".format(self._mxd_path))
             raise e
@@ -164,11 +174,16 @@ class Map:
                 if df.name == dataframe_name:
                     df.extent = extent
                     break
+        
+        # set view to pagelayout before exiting 
+        # to avoid weird behaviour if view is model after
+        # having set extent
+        self.map_object.activeView = "PAGE_LAYOUT"
 
 
     def _get_layout_elements(self, element_type="TEXT_ELEMENT"):
         """get layout elements of a specific type"""
-        return arcpy.mapping.ListLayoutElements(self._map, element_type)
+        return arcpy.mapping.ListLayoutElements(self.map_object, element_type)
 
     def _set_layout_text_element(self, old_text, new_text):
         """set text element to new text"""
