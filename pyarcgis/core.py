@@ -136,7 +136,7 @@ class Map:
         for key in layout_elements_map:
             self._set_layout_text_element(key, layout_elements_map[key])
 
-    def set_extent(self,dataframe_name,xmin=None,xmax=None,ymin=None,ymax=None,extent=None):
+    def set_extent(self,dataframe_name=None,xmin=None,xmax=None,ymin=None,ymax=None,extent=None):
         """set extent of a specific dataframe by passing xmin,xmax,ymin,ymax or an arcpy.Extent object"""
         # check if the user passed the correct parameters
         point_extent = (xmin is not None and xmax is not None and ymin is not None and ymax is not None)
@@ -145,6 +145,14 @@ class Map:
             raise Exception("You can't pass both point extent and extent object")
         if not point_extent and not extent_extent:
             raise Exception("You must pass either point extent or extent object")
+        
+        # if only one dataframe no need to pass the dataframe name
+        if len(self.dataframes) == 1:
+            dataframe_name = self.dataframes[0].name
+        else:
+            if dataframe_name is None:
+                raise Exception("You must pass a dataframe name")
+
         # set extent
         if point_extent:
             for df in self.dataframes:
