@@ -169,11 +169,27 @@ class Map:
                 if df.name == dataframe_name:
                     df.extent = arcpy.Extent(xmin,ymin,xmax,ymax)
                     break
+                raise Exception("dataframe not found")
+
         else:
             for df in self.dataframes:
                 if df.name == dataframe_name:
-                    df.extent = extent
+                    df.extent = arcpy.Extent(extent.XMin,extent.YMin,extent.XMax,extent.YMax)
                     break
+                raise Exception("dataframe not found")
+        
+        # check that the extent is set correctly
+        if point_extent:
+            for df in self.dataframes:
+                if df.name == dataframe_name:
+                    if df.extent.XMin != xmin or df.extent.XMax != xmax or df.extent.YMin != ymin or df.extent.YMax != ymax:
+                        raise Exception("Extent not set correctly")
+        if extent_extent:
+            for df in self.dataframes:
+                if df.name == dataframe_name:
+                    if df.extent.XMin != extent.XMin or df.extent.XMax != extent.XMax or df.extent.YMin != extent.YMin or df.extent.YMax != extent.YMax:
+                        raise Exception("Extent not set correctly")
+
         
         # set view to pagelayout before exiting 
         # to avoid weird behaviour if view is model after
