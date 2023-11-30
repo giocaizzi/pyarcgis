@@ -6,6 +6,8 @@
 # Redirect output to stderr.
 # exec 1>&2
 
+echo "Running pre-commit hook..."
+
 # Check for notebook cell changes.
 git diff --cached --name-only --diff-filter=d | while read filename; do
   if [ "${filename##*.}" = "ipynb" ]; then
