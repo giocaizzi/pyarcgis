@@ -4,7 +4,7 @@
 # If no changes are detected, the commit is aborted.
 
 # Redirect output to stderr.
-# exec 1>&2
+exec 1>&2
 
 echo "Running pre-commit hook..."
 
@@ -15,6 +15,9 @@ git diff --cached --name-only --diff-filter=d | while read filename; do
     if [ $? -eq 1 ]; then
       echo "No changes in code cells detected in ${filename}. Skipping commit."
       exit 1
+    else
+      echo "Changes in code cells detected in ${filename}. Committing."
+      exit 0
     fi
   else
     echo "No notebook files detected in commit. Skipping pre-commit hook."
