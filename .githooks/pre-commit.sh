@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Pre-commit hook to check for changes in notebook code cells.
+# If no changes are detected, the commit is aborted.
+
 # Redirect output to stderr.
 # exec 1>&2
 
